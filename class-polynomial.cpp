@@ -8,20 +8,24 @@ class Polynomial {
 private:
     std::vector<T> coef;
 
+    // delete leading non-significant zeros
     void Delete_Front_Zeros() {
         while (!coef.empty() && coef.back() == T())
             coef.pop_back();
     }
 public:
+    // initialize polynomial with vector of coefficients
     Polynomial(const std::vector<T>& v) : coef(v) {
         Delete_Front_Zeros();
     }
 
+    // initialize constant polynomial
     Polynomial(T c = T()) {
         if (c != T())
             coef.push_back(c);
     }
 
+    // initialize polynomial with the pair of iterators
     template <typename Iter>
     Polynomial(Iter first, Iter last) {
         while (first != last) {
@@ -29,8 +33,9 @@ public:
         }
         Delete_Front_Zeros();
     }
-
-    int Degree() const {  // returns degree of polynomial or -1 if it is zero polynomial
+    
+    // returns degree of polynomial or -1 if it is zero polynomial
+    int Degree() const {
         for (int i = coef.size() - 1; i >= 0; --i) {
             if (coef[i] != T())
                 return i;
@@ -38,13 +43,15 @@ public:
         return -1;
     }
 
-    T operator[] (size_t degree) const {  // returns coefficient before this degree
+    // returns coefficient before this degree
+    T operator[] (size_t degree) const {
         if (coef.size() > degree)
             return coef[degree];
         else
             return T();  // returns default value if requested degree is higher than max degree
     }
 
+    // returns true if two polynomials are equal, false otherwise
     bool operator == (const Polynomial<T>& other) const {
         int fd = Degree();
         int sd = other.Degree();
@@ -60,11 +67,13 @@ public:
         }
     }
 
+    // returns true if two polynomials are not equal, false otherwise
     bool operator != (const Polynomial<T>& other) const {
         return !(*this == other);
     }
 
-    Polynomial<T> operator + (const Polynomial<T>& other) const {  // sum of two polynomials
+    // sum of two polynomials
+    Polynomial<T> operator + (const Polynomial<T>& other) const {
         size_t pol_size = std::max(coef.size(), other.coef.size());
         std::vector<T> pol(pol_size, T());  // resizing with default values
         for (size_t i = 0; i != pol_size; ++i)
@@ -72,7 +81,8 @@ public:
         return Polynomial<T> {pol};
     }
 
-    Polynomial<T> operator - (const Polynomial<T>& other) const {  // difference of two polynomials
+    // difference of two polynomials
+    Polynomial<T> operator - (const Polynomial<T>& other) const {  
         size_t pol_size = std::max(coef.size(), other.coef.size());
         std::vector<T> pol(pol_size, T());
         for (size_t i = 0; i != pol_size; ++i)
@@ -80,7 +90,8 @@ public:
         return Polynomial<T> {pol};
     }
 
-    Polynomial<T> operator * (const Polynomial<T>& other) const {  // product of two polynomials
+    // product of two polynomials
+    Polynomial<T> operator * (const Polynomial<T>& other) const {  
         size_t pol_size = coef.size() + other.coef.size();
         std::vector<T> pol(pol_size, T());
         for (size_t i = 0; i != coef.size(); ++i) {
@@ -90,6 +101,7 @@ public:
         return Polynomial<T> {pol};
     }
 
+    // sum of two polynomials
     Polynomial<T>& operator += (const Polynomial<T>& other) {
         size_t pol_size = std::max(coef.size(), other.coef.size());
         coef.resize(pol_size, T());
@@ -99,6 +111,7 @@ public:
         return *this;
     }
 
+    // difference of two polynomials
     Polynomial<T>& operator -= (const Polynomial<T>& other) {
         size_t pol_size = std::max(coef.size(), other.coef.size());
         coef.resize(pol_size, T());
@@ -108,13 +121,15 @@ public:
         return *this;
     }
 
+    // product of two polynomials
     Polynomial& operator *= (const Polynomial<T>& other) {
         Polynomial poly = *this * other;
         *this = poly;
         return *this;
     }
 
-    T operator() (T value) const {  // calculates f(value)
+    // calculates f(value)
+    T operator() (T value) const {  
         T ans = T();
         for (int i = coef.size() - 1; i >= 0; --i)
             ans = coef[i] + ans * value;  // Horner's method
@@ -129,7 +144,8 @@ public:
         return coef.end();
     }
 
-    Polynomial<T> operator & (const Polynomial<T>& other) const {  // returns composition
+    // returns composition
+    Polynomial<T> operator & (const Polynomial<T>& other) const {  
         Polynomial<T> composition;
         for (size_t i = 0; i != coef.size(); ++i) {
             if (coef[i] != T()) {
@@ -142,6 +158,7 @@ public:
         return composition;
     }
 
+    // divides one polynomial by another
     Polynomial<T> operator / (const Polynomial<T>& other) const {
         Polynomial<T> first = *this;
         std::vector<T> result(coef.size());
@@ -160,11 +177,13 @@ public:
         return Polynomial<T> {result};
     }
 
-    Polynomial<T> operator % (const Polynomial<T>& other) const {  // returns remainder
+    // returns remainder
+    Polynomial<T> operator % (const Polynomial<T>& other) const {  
         return *this - (*this / other) * other;
     }
 
-    Polynomial<T> operator , (const Polynomial<T>& other) const {  // returns PolynomialGCD
+    // returns PolynomialGCD (greatest common divisor)
+    Polynomial<T> operator , (const Polynomial<T>& other) const {  
         Polynomial<T> first = *this, second = other;
         if (first.Degree() < second.Degree()) {
             std::swap(first, second);
@@ -182,14 +201,18 @@ public:
     }
 };
 
+// overload "<<" operator to print polynomials as: std::cout << polynomial;
+// example: x^3+2*x^2-x+3
 template <typename T>
 std::ostream& operator << (std::ostream& out, const Polynomial<T>& pol) {
     int deg = pol.Degree();
     if (deg == -1) {
-        out << '0';  // zero polynomial
+        // zero polynomial
+        out << '0';  
     } else {
         for (int i = deg; i != -1; --i) {
-            if (pol[i] != T(0)) {  // printing only degree with non-zero coefficient
+            if (pol[i] != T(0)) {
+                // printing only degree with non-zero coefficient
                 if (pol[i] != T(1) && pol[i] != T(-1)) {
                     if (i != deg && pol[i] > T(0)) {
                         out << "+";
@@ -199,7 +222,8 @@ std::ostream& operator << (std::ostream& out, const Polynomial<T>& pol) {
                         out << "*x^" << i;
                     if (i == 1)
                         out << "*x";
-                } else if (pol[i] == T(-1)) {  // coefficient -1 for non-zero degree prints as -
+                } else if (pol[i] == T(-1)) {
+                    // coefficient -1 for non-zero degree prints as -
                     if (i > 1)
                         out << "-x^" << i;
                     if (i == 1)
